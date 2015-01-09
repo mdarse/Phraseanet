@@ -186,7 +186,7 @@ class ElasticSearchEngine implements SearchEngineInterface
      */
     public function addRecord(\record_adapter $record)
     {
-        $this->app['elasticsearch.indexer.record_indexer']->indexSingleRecord($record, $this->indexName);
+        $this->app['elasticsearch.indexer.record_indexer']->indexSingleRecord($record);
 
         return $this;
     }
@@ -298,6 +298,10 @@ class ElasticSearchEngine implements SearchEngineInterface
                 }
 
                 $pathsToFilter[$term['_source']['path']] = $term['_score'];
+
+                if (null === $term['_source']['fields']) {
+                    continue;
+                }
 
                 foreach ($term['_source']['fields'] as $field) {
                     $collectFields['caption.'.$field][] = $term['_source']['value'];
