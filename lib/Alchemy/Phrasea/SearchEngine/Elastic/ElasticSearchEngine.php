@@ -499,7 +499,7 @@ class ElasticSearchEngine implements SearchEngineInterface
                     }
 
                     $label = $flagNamesMap[$databoxId][$n];
-                    $databox_status[] = ['term' => [sprintf('flags.%s', $label) => (bool) $v]];
+                    $databox_status[] = ['term' => [sprintf('flags.%s.value', $label) => (bool) $v]];
                 };
                 $status_filter[] = $databox_status;
 
@@ -640,7 +640,7 @@ class ElasticSearchEngine implements SearchEngineInterface
                 }
                 $flagFilter = [];
 
-                $flagField = sprintf('flags.%s', $flagName);
+                $flagField = sprintf('flags.%s.value', $flagName);
                 $flagFilter['term'][$flagField] = $flagRule === self::FLAG_SET_ONLY ? true : false;
 
                 $ruleFilter['bool']['must'][] = $flagFilter;

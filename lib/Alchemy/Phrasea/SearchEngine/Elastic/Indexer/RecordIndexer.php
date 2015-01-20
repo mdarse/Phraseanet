@@ -18,7 +18,6 @@ use Alchemy\Phrasea\SearchEngine\Elastic\Exception\MergeException;
 use Alchemy\Phrasea\SearchEngine\Elastic\Mapping;
 use Alchemy\Phrasea\SearchEngine\Elastic\RecordFetcher;
 use Alchemy\Phrasea\SearchEngine\Elastic\RecordHelper;
-use Alchemy\Phrasea\SearchEngine\Elastic\StringUtils;
 use Alchemy\Phrasea\SearchEngine\Elastic\Thesaurus;
 use media_subdef;
 
@@ -241,7 +240,19 @@ class RecordIndexer
                 $key = RecordHelper::normalizeFlagKey($status['labelon']);
                 // We only add to mapping new statuses
                 if (!$mapping->has($key)) {
-                    $mapping->add($key, 'boolean');
+                    $statusMapping = new Mapping();
+                    $statusMapping->add('value', 'boolean');
+                    $statusMapping->add('displayable', 'boolean');
+                    $statusMapping->add('path', 'string')->notAnalyzed()->notIndexed();
+
+                    $labelMapping = new Mapping();
+                    foreach ($this->locales as $locale) {
+                        $labelMapping->add($locale, 'string')->notAnalyzed()->notIndexed();
+                    }
+
+                    $statusMapping->add('labels', $labelMapping);
+
+                    $mapping->add($key, $statusMapping);
                 }
             }
         }
@@ -249,12 +260,6 @@ class RecordIndexer
         return $mapping;
     }
 
-    /**
-     * Inspired by ESRecordSerializer
-     *
-     * @todo complete, with all the other transformations
-     * @param $record
-     */
     private function transform($record)
     {
         $dateFields = $this->elasticSearchEngine->getAvailableDateFields();
@@ -264,7 +269,14 @@ class RecordIndexer
         foreach ($databox->get_statusbits() as $bit => $status) {
             $key = RecordHelper::normalizeFlagKey($status['labelon']);
 
-            $record['flags'][$key] = \databox_status::bitIsSet($record['flags_bitmask'], $bit);
+            $value = \databox_status::bitIsSet($record['flags_bitmask'], $bit);
+
+            $record['flags'][$key] = [
+                'value' => $value,
+                'displayable' => (bool) $status['printable'],
+                'labels' => $status[sprintf('labels_%s_i18n', $value ? 'on' : 'off')],
+                'path' => $status[sprintf('img_%s', $value ? 'on' : 'off')],
+            ];
         }
 
         foreach ($dateFields as $field) {
