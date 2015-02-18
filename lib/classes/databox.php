@@ -3,7 +3,7 @@
 /*
  * This file is part of Phraseanet
  *
- * (c) 2005-2014 Alchemy
+ * (c) 2005-2015 Alchemy
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -214,11 +214,7 @@ class databox extends base
         $ret = [];
 
         foreach ($this->get_available_collections() as $coll_id) {
-            try {
-                $ret[] = collection::get_from_coll_id($this->app, $this, $coll_id);
-            } catch (\Exception $e) {
-
-            }
+            $ret[] = collection::get_from_coll_id($this->app, $this, $coll_id);
         }
 
         return $ret;
@@ -248,6 +244,7 @@ class databox extends base
         foreach ($rs as $row) {
             $ret[] = (int) $row['server_coll_id'];
         }
+
         $this->set_data_to_cache($ret, self::CACHE_COLLECTIONS);
 
         return $ret;
@@ -682,6 +679,8 @@ class databox extends base
      */
     public function get_meta_structure()
     {
+        $metaStructData = array();
+
         if ($this->meta_struct) {
             return $this->meta_struct;
         }
@@ -703,10 +702,8 @@ class databox extends base
 
         $this->meta_struct = new databox_descriptionStructure();
 
-        if ($metaStructData) {
-            foreach ($metaStructData as $row) {
-                $this->meta_struct->add_element(databox_field::get_instance($this->app, $this, $row['id']));
-            }
+        foreach ((array) $metaStructData as $row) {
+            $this->meta_struct->add_element(databox_field::get_instance($this->app, $this, $row['id']));
         }
 
         return $this->meta_struct;

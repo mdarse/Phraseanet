@@ -3,7 +3,7 @@
 /*
  * This file is part of Phraseanet
  *
- * (c) 2005-2014 Alchemy
+ * (c) 2005-2015 Alchemy
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -364,7 +364,7 @@ class Account implements ControllerProviderInterface
 
         if (0 === count(array_diff($accountFields, array_keys($request->request->all())))) {
             $app['authentication']->getUser()
-                ->setGender($request->request->get("form_gender"))
+                ->setGender((int) $request->request->get("form_gender"))
                 ->setFirstName($request->request->get("form_firstname"))
                 ->setLastName($request->request->get("form_lastname"))
                 ->setAddress($request->request->get("form_address"))

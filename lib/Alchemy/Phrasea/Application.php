@@ -3,7 +3,7 @@
 /*
  * This file is part of Phraseanet
  *
- * (c) 2005-2014 Alchemy
+ * (c) 2005-2015 Alchemy
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -487,6 +487,7 @@ class Application extends SilexApplication
                 $dispatcher->addSubscriber($app['phraseanet.maintenance-subscriber']);
                 $dispatcher->addSubscriber($app['phraseanet.cookie-disabler-subscriber']);
                 $dispatcher->addSubscriber($app['phraseanet.session-manager-subscriber']);
+                $dispatcher->addSubscriber($app['phraseanet.record-edit-subscriber']);
                 $dispatcher->addSubscriber(new PhraseaInstallSubscriber($app));
                 $dispatcher->addSubscriber(new FeedEntrySubscriber($app));
                 $dispatcher->addSubscriber(new RegistrationSubscriber($app));

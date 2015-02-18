@@ -3,7 +3,7 @@
 /*
  * This file is part of Phraseanet
  *
- * (c) 2005-2014 Alchemy
+ * (c) 2005-2015 Alchemy
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -41,6 +41,8 @@ class Nginx extends AbstractStaticMode implements StaticFileModeInterface
         $output = "\n";
         $output .= "    location " . $this->mapping['mount-point']. " {\n";
         $output .= "        alias ".$this->mapping['directory'].";\n";
+        $output .= "        types        { }";
+        $output .= "        default_type image/jpeg;";
         $output .= "    }\n";
 
         return $output;

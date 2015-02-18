@@ -4252,3 +4252,16 @@ ui-dialog-titlebar {
     position: relative;
     float: left;
 }
+
+#clientModal,  #clientModal .modal-footer {
+    background-color: #404040;
+}
+
+#clientModal .close {
+    color: #fff;
+}
+
+#answers .status img {
+    max-width: 16px;
+    max-heigh: 16px;
+}

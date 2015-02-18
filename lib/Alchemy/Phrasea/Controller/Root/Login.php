@@ -3,7 +3,7 @@
 /*
  * This file is part of Phraseanet
  *
- * (c) 2005-2014 Alchemy
+ * (c) 2005-2015 Alchemy
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -620,9 +620,11 @@ class Login implements ControllerProviderInterface
 
                     $url = $app->url('login_renew_password', ['token' => $token->getValue()], true);
 
+                    $expirationDate = new \DateTime('+1 day');
                     $mail = MailRequestPasswordUpdate::create($app, $receiver);
                     $mail->setLogin($user->getLogin());
                     $mail->setButtonUrl($url);
+                    $mail->setExpiration($expirationDate);
 
                     $app['notification.deliverer']->deliver($mail);
                     $app->addFlash('info', $app->trans('phraseanet:: Un email vient de vous etre envoye'));
@@ -820,9 +822,11 @@ class Login implements ControllerProviderInterface
 
         $width = $height = null;
         if ($app['request']->cookies->has('screen')) {
-            $data = explode('x', $app['request']->cookies->get('screen'));
-            $width = $data[0];
-            $height = $data[1];
+            $data = array_filter((explode('x', $app['request']->cookies->get('screen', ''))));
+            if (count($data) === 2) {
+                $width = $data[0];
+                $height = $data[1];
+            }
         }
         $session->setIpAddress($app['request']->getClientIp())
             ->setScreenHeight($height)

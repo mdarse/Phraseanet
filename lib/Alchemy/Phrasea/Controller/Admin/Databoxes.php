@@ -3,7 +3,7 @@
 /*
  * This file is part of Phraseanet
  *
- * (c) 2005-2014 Alchemy
+ * (c) 2005-2015 Alchemy
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -114,6 +114,9 @@ class Databoxes implements ControllerProviderInterface
                 break;
             case 'mount-failed' :
                 $errorMsg = $app->trans('Database could not be mounted');
+                break;
+            case 'innodb-support' :
+                $errorMsg = _('Database server does not support InnoDB storage engine');
                 break;
         }
 
