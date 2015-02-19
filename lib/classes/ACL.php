@@ -1585,6 +1585,17 @@ class ACL implements cache_cacheableInterface
         return $this;
     }
 
+    public function can_see_business_fields(\databox $databox)
+    {
+        foreach($databox->get_collections() as $collection) {
+            if ($this->has_access_to_base($collection->get_base_id()) && $this->has_right_on_base($collection->get_base_id(), 'canmodifrecord')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Returns an array of collections on which the user is 'order master'
      *

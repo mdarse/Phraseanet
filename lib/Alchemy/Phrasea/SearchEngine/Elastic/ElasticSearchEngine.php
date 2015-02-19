@@ -292,27 +292,13 @@ class ElasticSearchEngine implements SearchEngineInterface
 
 
         $params = $this->createRecordQueryParams($recordQuery, $options, null);
+
         $params['body']['from'] = $offset;
         $params['body']['size'] = $perPage;
 
-        // Debug at the moment. See https://phraseanet.atlassian.net/browse/PHRAS-322
-        $params['body']['aggs'] = array (
-            'Keywords' => array ('terms' =>
-                array ('field' => 'caption.Keywords.raw', 'size' => 20),
-            ),
-            'Photographer' => array ('terms' =>
-                array ('field' => 'caption.Photographer.raw', 'size' => 20),
-            ),
-            'Headline' => array ('terms' =>
-                array ('field' => 'caption.Headline.raw', 'size' => 20),
-            ),
-            'City' => array ('terms' =>
-                array ('field' => 'caption.City.raw', 'size' => 20),
-            ),
-            'Country' => array ('terms' =>
-                array ('field' => 'caption.Country.raw', 'size' => 20),
-            ),
-        );
+        if (0 !== count($aggs = $this->getAggregationQueryParams($options))) {
+            $params['body']['aggs'] = $aggs;
+        }
 
         $res = $this->doExecute('search', $params);
 
@@ -336,7 +322,7 @@ class ElasticSearchEngine implements SearchEngineInterface
 
         return new SearchEngineResult($results, json_encode($query), $res['took'], $offset,
             $res['hits']['total'], $res['hits']['total'], null, null, $suggestions, [],
-            $this->indexName, $res['aggregations']);
+            $this->indexName, isset($res['aggregations']) ? $res['aggregations'] : []);
     }
 
     /**
@@ -416,6 +402,42 @@ class ElasticSearchEngine implements SearchEngineInterface
         }
 
         $params['body']['query'] = $ESQuery;
+
+        return $params;
+    }
+
+    private function getAggregationQueryParams(SearchEngineOptions $options)
+    {
+        $params = [];
+
+        foreach ($options->getDataboxes() as $databox) {
+            foreach ($databox->get_meta_structure() as $fieldStructure) {
+                if (false === $fieldStructure->isAggregable()) {
+                    continue;
+                }
+
+                $indexField = 'caption';
+
+                if ($fieldStructure->isBusiness()) {
+                    if (false === $this->app['authentication']->isAuthenticated()) {
+                        continue;
+                    }
+                    $acl = $this->app['acl']->get($this->app['authentication']->getUser());
+                    if (false === $acl->can_see_business_fields($databox)) {
+                        continue;
+                    }
+
+                    $indexField = 'private_caption';
+                }
+
+                $params[$fieldStructure->get_name()] = [
+                    'terms' => [
+                        'field' => sprintf('%s.%s.raw', $indexField, $fieldStructure->get_name()),
+                        'size' => 20
+                    ]
+                ];
+            }
+        }
 
         return $params;
     }
@@ -506,7 +528,7 @@ class ElasticSearchEngine implements SearchEngineInterface
     {
         $sort = [];
 
-        if ($options->getSortBy() === SearchEngineOptions::SORT_RELEVANCE) {
+        if ($options->getSortBy() === null || $options->getSortBy() === SearchEngineOptions::SORT_RELEVANCE) {
             $sort['_score'] = $options->getSortOrder();
         } elseif ($options->getSortBy() === SearchEngineOptions::SORT_CREATED_ON) {
             $sort['created_on'] = $options->getSortOrder();
