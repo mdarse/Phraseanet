@@ -37,8 +37,33 @@ class PhraseanetExtension extends \Twig_Extension
             new \Twig_SimpleFunction('collection_logo', array($this, 'getCollectionLogo'), array(
                 'is_safe' => array('html')
             )),
-            new \Twig_SimpleFunction('record_flags', array($this, 'getRecordFlags'))
+            new \Twig_SimpleFunction('record_flags', array($this, 'getRecordFlags')),
+            new \Twig_SimpleFunction('caption_field', array($this, 'getCaptionField')),
         );
+    }
+
+    public function getCaptionField(RecordInterface $record, $field, $value)
+    {
+        if ($record instanceof ElasticsearchRecord) {
+            $highlightKey = sprintf('caption.%s', $field);
+
+            if (false === $record->getHighlight()->containsKey($highlightKey)) {
+                return implode('; ', (array) $value);
+            }
+
+            $highlightValue = $record->getHighlight()->get($highlightKey);
+
+            // if field is multivalued, merge highlighted values with captions ones
+            if (is_array($value)) {
+                $highlightValue = array_merge($highlightValue, array_diff($value, array_map(function($value) {
+                    return str_replace(array('[[em]]', '[[/em]]'), array('', ''), $value);
+                }, $highlightValue)));
+            }
+
+            return implode('; ', (array) $highlightValue);
+        }
+
+        return implode('; ', (array) $value);
     }
 
     public function getRecordFlags(RecordInterface $record)

@@ -268,6 +268,7 @@ class RecordIndexer
                 } else {
                     $m->addRawVersion();
                     $m->addAnalyzedVersion($this->locales);
+                    $m->highlight();
                 }
             }
         }

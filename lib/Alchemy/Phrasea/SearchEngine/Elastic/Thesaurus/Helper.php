@@ -30,6 +30,5 @@ class Helper
                 $conceptIds[] = $node->getAttribute('id');
             }
         }
-
     }
 }

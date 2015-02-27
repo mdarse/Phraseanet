@@ -80,55 +80,15 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro caption_value(field, bounceable) %}
-    {% autoescape false %}
-    {% set terms = [] %}
-    {% for data in field.values %}
-        {% if data.from_thesaurus and bounceable %}
-            {% set value = data.value|e|bounce(field.name, data.qjs, field.sbas_id) %}
-        {% else %}
-            {% set value = data.value|e %}
-        {% endif %}
-        {% set terms = [value]|merge(terms) %}
-    {% endfor %}
-    {{ terms|join(' ; ') }}
-    {% endautoescape %}
-{% endmacro %}
-
-{% macro caption_field(field, bounceable, extra_classes) %}
-    <div class="desc {{ extra_classes|join(' ') }}">
-        <b>{{ field.label }}</b> :
-        {{ _self.caption_value(field, bounceable|default(true))|highlight|linkify }}
-    </div>
-{% endmacro %}
-
-{% macro format_caption(record, highlight, search_engine, include_business, bounceable, technical_data) %}
-    {% for field in record.get_caption().get_highlight_fields(highlight, null, search_engine, include_business) %}
-        {% set extra_classes = ['pair'] %}
-        {% if loop.index is odd %}
-            {% set extra_classes = ['impair'] %}
-        {% endif %}
-        {{ _self.caption_field(field, bounceable|default(true), extra_classes) }}
-    {% endfor %}
-    {% if technical_data|default(true) and app['authentication'].getUser() is not none and app['settings'].getUserSetting(app['authentication'].getUser(), 'technical_display') == 'group' %}
-        <hr/>
-        {% include 'common/technical_datas.html.twig' %}
-    {% endif %}
-{% endmacro %}
-
-{% macro caption(record, business, technical) %}
+{% macro caption(record, can_see_business, display_exif) %}
     {# @todo handle business fields #}
     {% for name, value in record.caption %}
-        <div class="desc {{ loop.index is odd ? 'impair' : 'pair' }}">
+        <div class="desc">
             <b>{{ name }}</b> :
-            {% if value is iterable %}
-                {{ value | join(' ; ') }}
-            {% else %}
-                {{ value }}
-            {% endif %}
+            {{ caption_field(record, name, value)|e|highlight }}
         </div>
     {% endfor %}
-    {% if technical|default(true) and app['authentication'].user is not none and user_setting('technical_display') == 'group' %}
+    {% if display_exif|default(true) and app['authentication'].user is not none and user_setting('technical_display') == 'group' %}
         <hr/>
         {% include 'common/technical_datas.html.twig' %}
     {% endif %}

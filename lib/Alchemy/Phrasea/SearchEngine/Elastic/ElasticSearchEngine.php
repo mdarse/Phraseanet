@@ -273,10 +273,16 @@ class ElasticSearchEngine implements SearchEngineInterface
         $queryContext = new QueryContext($this->locales, $this->app['locale'], $searchableFields);
         $recordQuery = $this->app['query_parser']->compile($string, $queryContext);
 
-
         $params = $this->createRecordQueryParams($recordQuery, $options, null);
         $params['body']['from'] = $offset;
         $params['body']['size'] = $perPage;
+
+        $params['body']['highlight'] = [
+            'pre_tags' =>  ['[[em]]'],
+            'post_tags' =>  ['[[/em]]'],
+            'order' => 'score',
+            'fields' => ['caption.*' => new \stdClass()]
+        ];
 
         // Debug at the moment. See https://phraseanet.atlassian.net/browse/PHRAS-322
         $params['body']['aggs'] = array (
@@ -304,7 +310,7 @@ class ElasticSearchEngine implements SearchEngineInterface
 
         $n = 0;
         foreach ($res['hits']['hits'] as $hit) {
-            $results[] = ElasticsearchRecordHydrator::hydrate($hit['_source'], $n++);
+            $results[] = ElasticsearchRecordHydrator::hydrate($hit, $n++);
         }
 
         $query['ast'] = $this->app['query_parser']->parse($string)->dump();
@@ -354,20 +360,6 @@ class ElasticSearchEngine implements SearchEngineInterface
      */
     public function clearAllCache(\DateTime $date = null)
     {
-    }
-
-    private function createTermQueryParams($query, SearchEngineOptions $options)
-    {
-        $params = [
-            'index' => $this->indexName,
-            'type'  => TermIndexer::TYPE_NAME,
-            'body'  => [],
-            'size'  => 20,
-        ];
-
-        $params['body']['query'] = $query;
-
-        return $params;
     }
 
     private function createRecordQueryParams($ESQuery, SearchEngineOptions $options, \record_adapter $record = null)
